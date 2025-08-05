@@ -1,0 +1,358 @@
+package com.ceilfors.jenkins.plugins.jiratrigger.webhook
+
+import com.atlassian.jira.rest.client.api.domain.Issue
+import org.codehaus.jettison.json.JSONObject
+import spock.lang.Specification
+
+/**
+ * Integration test to verify that the null timetracking fix works in the actual webhook processing flow.
+ */
+class WebhookNullTimetrackingIntegrationTest extends Specification {
+
+    def 'Should process webhook with null timetracking values without throwing JSONException'() {
+        given:
+        def webhookJson = '''
+        {
+          "timestamp": 1451136000000,
+          "webhookEvent": "jira:issue_updated",
+          "issue": {
+            "expand": "renderedFields,names,schema,transitions,operations,editmeta,changelog,versionedRepresentations",
+            "id": "11120",
+            "self": "http://localhost:2990/jira/rest/api/2/issue/11120",
+            "key": "TEST-136",
+            "fields": {
+              "issuetype": {
+                "self": "http://localhost:2990/jira/rest/api/2/issuetype/10000",
+                "id": "10000",
+                "description": "A task that needs to be done.",
+                "iconUrl": "http://localhost:2990/jira/secure/viewavatar?size=xsmall&avatarId=10318&avatarType=issuetype",
+                "name": "Task",
+                "subtask": false,
+                "avatarId": 10318
+              },
+              "components": [],
+              "timespent": null,
+              "timeoriginalestimate": null,
+              "description": "description body",
+              "project": {
+                "self": "http://localhost:2990/jira/rest/api/2/project/10000",
+                "id": "10000",
+                "key": "TEST",
+                "name": "TEST",
+                "avatarUrls": {
+                  "48x48": "http://localhost:2990/jira/secure/projectavatar?avatarId=10011",
+                  "24x24": "http://localhost:2990/jira/secure/projectavatar?size=small&avatarId=10011",
+                  "16x16": "http://localhost:2990/jira/secure/projectavatar?size=xsmall&avatarId=10011",
+                  "32x32": "http://localhost:2990/jira/secure/projectavatar?size=medium&avatarId=10011"
+                }
+              },
+              "fixVersions": [],
+              "aggregatetimespent": null,
+              "resolution": null,
+              "timetracking": {
+                "originalEstimate": null,
+                "remainingEstimate": null,
+                "timeSpent": null,
+                "originalEstimateSeconds": null,
+                "remainingEstimateSeconds": null,
+                "timeSpentSeconds": null
+              },
+              "attachment": [],
+              "aggregatetimeestimate": null,
+              "resolutiondate": null,
+              "workratio": 0,
+              "summary": "summary content",
+              "lastViewed": "2015-12-26T12:00:43.169+0000",
+              "watches": {
+                "self": "http://localhost:2990/jira/rest/api/2/issue/TEST-136/watchers",
+                "watchCount": 1,
+                "isWatching": true
+              },
+              "creator": {
+                "self": "http://localhost:2990/jira/rest/api/2/user?username=admin",
+                "name": "admin",
+                "key": "admin",
+                "accountId": "admin",
+                "emailAddress": "admin@example.com",
+                "avatarUrls": {
+                  "48x48": "http://localhost:2990/jira/secure/useravatar?avatarId=10122",
+                  "24x24": "http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122",
+                  "16x16": "http://localhost:2990/jira/secure/useravatar?size=xsmall&avatarId=10122",
+                  "32x32": "http://localhost:2990/jira/secure/useravatar?size=medium&avatarId=10122"
+                },
+                "displayName": "Administrator",
+                "active": true,
+                "timeZone": "Europe/London"
+              },
+              "reporter": {
+                "self": "http://localhost:2990/jira/rest/api/2/user?username=admin",
+                "name": "admin",
+                "key": "admin",
+                "accountId": "admin",
+                "emailAddress": "admin@example.com",
+                "avatarUrls": {
+                  "48x48": "http://localhost:2990/jira/secure/useravatar?avatarId=10122",
+                  "24x24": "http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122",
+                  "16x16": "http://localhost:2990/jira/secure/useravatar?size=xsmall&avatarId=10122",
+                  "32x32": "http://localhost:2990/jira/secure/useravatar?size=medium&avatarId=10122"
+                },
+                "displayName": "Administrator",
+                "active": true,
+                "timeZone": "Europe/London"
+              },
+              "assignee": null,
+              "updated": "2015-12-26T12:00:43.169+0000",
+              "status": {
+                "self": "http://localhost:2990/jira/rest/api/2/status/10000",
+                "description": "The issue is open and ready for the assignee to start work on it.",
+                "iconUrl": "http://localhost:2990/jira/images/icons/status_open.gif",
+                "name": "To Do",
+                "id": "10000",
+                "statusCategory": {
+                  "self": "http://localhost:2990/jira/rest/api/2/statuscategory/2",
+                  "id": 2,
+                  "key": "new",
+                  "colorName": "blue-gray",
+                  "name": "To Do"
+                }
+              },
+              "progress": {
+                "progress": 0,
+                "total": 0
+              },
+              "votes": {
+                "self": "http://localhost:2990/jira/rest/api/2/issue/TEST-136/votes",
+                "votes": 0,
+                "hasVoted": false
+              },
+              "worklog": {
+                "startAt": 0,
+                "maxResults": 20,
+                "total": 0,
+                "worklogs": []
+              },
+              "issuelinks": [],
+              "subtasks": [],
+              "labels": [],
+              "environment": null,
+              "duedate": null,
+              "versions": [],
+              "priority": {
+                "self": "http://localhost:2990/jira/rest/api/2/priority/3",
+                "iconUrl": "http://localhost:2990/jira/images/icons/priority_medium.gif",
+                "name": "Medium",
+                "id": "3"
+              }
+            }
+          },
+          "changelog": {
+            "id": "12345",
+            "items": []
+          }
+        }
+        '''
+        def webhookJsonObject = new JSONObject(webhookJson)
+        def changelogParser = new WebhookChangelogEventJsonParser()
+
+        when:
+        def changelogEvent = changelogParser.parse(webhookJsonObject)
+
+        then:
+        noExceptionThrown()
+        changelogEvent != null
+        changelogEvent.issue != null
+        changelogEvent.issue.key == 'TEST-136'
+    }
+
+    def 'Should process webhook with comment event and null timetracking values'() {
+        given:
+        def webhookJson = '''
+        {
+          "timestamp": 1451136000000,
+          "webhookEvent": "comment_created",
+          "issue": {
+            "expand": "renderedFields,names,schema,transitions,operations,editmeta,changelog,versionedRepresentations",
+            "id": "11120",
+            "self": "http://localhost:2990/jira/rest/api/2/issue/11120",
+            "key": "TEST-136",
+            "fields": {
+              "issuetype": {
+                "self": "http://localhost:2990/jira/rest/api/2/issuetype/10000",
+                "id": "10000",
+                "description": "A task that needs to be done.",
+                "iconUrl": "http://localhost:2990/jira/secure/viewavatar?size=xsmall&avatarId=10318&avatarType=issuetype",
+                "name": "Task",
+                "subtask": false,
+                "avatarId": 10318
+              },
+              "components": [],
+              "timespent": null,
+              "timeoriginalestimate": null,
+              "description": "description body",
+              "project": {
+                "self": "http://localhost:2990/jira/rest/api/2/project/10000",
+                "id": "10000",
+                "key": "TEST",
+                "name": "TEST",
+                "avatarUrls": {
+                  "48x48": "http://localhost:2990/jira/secure/projectavatar?avatarId=10011",
+                  "24x24": "http://localhost:2990/jira/secure/projectavatar?size=small&avatarId=10011",
+                  "16x16": "http://localhost:2990/jira/secure/projectavatar?size=xsmall&avatarId=10011",
+                  "32x32": "http://localhost:2990/jira/secure/projectavatar?size=medium&avatarId=10011"
+                }
+              },
+              "fixVersions": [],
+              "aggregatetimespent": null,
+              "resolution": null,
+              "timetracking": {
+                "originalEstimate": null,
+                "remainingEstimate": null,
+                "timeSpent": null,
+                "originalEstimateSeconds": null,
+                "remainingEstimateSeconds": null,
+                "timeSpentSeconds": null
+              },
+              "attachment": [],
+              "aggregatetimeestimate": null,
+              "resolutiondate": null,
+              "workratio": 0,
+              "summary": "summary content",
+              "lastViewed": "2015-12-26T12:00:43.169+0000",
+              "watches": {
+                "self": "http://localhost:2990/jira/rest/api/2/issue/TEST-136/watchers",
+                "watchCount": 1,
+                "isWatching": true
+              },
+              "creator": {
+                "self": "http://localhost:2990/jira/rest/api/2/user?username=admin",
+                "name": "admin",
+                "key": "admin",
+                "accountId": "admin",
+                "emailAddress": "admin@example.com",
+                "avatarUrls": {
+                  "48x48": "http://localhost:2990/jira/secure/useravatar?avatarId=10122",
+                  "24x24": "http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122",
+                  "16x16": "http://localhost:2990/jira/secure/useravatar?size=xsmall&avatarId=10122",
+                  "32x32": "http://localhost:2990/jira/secure/useravatar?size=medium&avatarId=10122"
+                },
+                "displayName": "Administrator",
+                "active": true,
+                "timeZone": "Europe/London"
+              },
+              "reporter": {
+                "self": "http://localhost:2990/jira/rest/api/2/user?username=admin",
+                "name": "admin",
+                "key": "admin",
+                "accountId": "admin",
+                "emailAddress": "admin@example.com",
+                "avatarUrls": {
+                  "48x48": "http://localhost:2990/jira/secure/useravatar?avatarId=10122",
+                  "24x24": "http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122",
+                  "16x16": "http://localhost:2990/jira/secure/useravatar?size=xsmall&avatarId=10122",
+                  "32x32": "http://localhost:2990/jira/secure/useravatar?size=medium&avatarId=10122"
+                },
+                "displayName": "Administrator",
+                "active": true,
+                "timeZone": "Europe/London"
+              },
+              "assignee": null,
+              "updated": "2015-12-26T12:00:43.169+0000",
+              "status": {
+                "self": "http://localhost:2990/jira/rest/api/2/status/10000",
+                "description": "The issue is open and ready for the assignee to start work on it.",
+                "iconUrl": "http://localhost:2990/jira/images/icons/status_open.gif",
+                "name": "To Do",
+                "id": "10000",
+                "statusCategory": {
+                  "self": "http://localhost:2990/jira/rest/api/2/statuscategory/2",
+                  "id": 2,
+                  "key": "new",
+                  "colorName": "blue-gray",
+                  "name": "To Do"
+                }
+              },
+              "progress": {
+                "progress": 0,
+                "total": 0
+              },
+              "votes": {
+                "self": "http://localhost:2990/jira/rest/api/2/issue/TEST-136/votes",
+                "votes": 0,
+                "hasVoted": false
+              },
+              "worklog": {
+                "startAt": 0,
+                "maxResults": 20,
+                "total": 0,
+                "worklogs": []
+              },
+              "issuelinks": [],
+              "subtasks": [],
+              "labels": [],
+              "environment": null,
+              "duedate": null,
+              "versions": [],
+              "priority": {
+                "self": "http://localhost:2990/jira/rest/api/2/priority/3",
+                "iconUrl": "http://localhost:2990/jira/images/icons/priority_medium.gif",
+                "name": "Medium",
+                "id": "3"
+              }
+            }
+          },
+          "comment": {
+            "self": "http://localhost:2990/jira/rest/api/2/issue/11120/comment/10000",
+            "id": "10000",
+            "author": {
+              "self": "http://localhost:2990/jira/rest/api/2/user?username=admin",
+              "name": "admin",
+              "key": "admin",
+              "accountId": "admin",
+              "emailAddress": "admin@example.com",
+              "avatarUrls": {
+                "48x48": "http://localhost:2990/jira/secure/useravatar?avatarId=10122",
+                "24x24": "http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122",
+                "16x16": "http://localhost:2990/jira/secure/useravatar?size=xsmall&avatarId=10122",
+                "32x32": "http://localhost:2990/jira/secure/useravatar?size=medium&avatarId=10122"
+              },
+              "displayName": "Administrator",
+              "active": true,
+              "timeZone": "Europe/London"
+            },
+            "body": "Test comment",
+            "updateAuthor": {
+              "self": "http://localhost:2990/jira/rest/api/2/user?username=admin",
+              "name": "admin",
+              "key": "admin",
+              "accountId": "admin",
+              "emailAddress": "admin@example.com",
+              "avatarUrls": {
+                "48x48": "http://localhost:2990/jira/secure/useravatar?avatarId=10122",
+                "24x24": "http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122",
+                "16x16": "http://localhost:2990/jira/secure/useravatar?size=xsmall&avatarId=10122",
+                "32x32": "http://localhost:2990/jira/secure/useravatar?size=medium&avatarId=10122"
+              },
+              "displayName": "Administrator",
+              "active": true,
+              "timeZone": "Europe/London"
+            },
+            "created": "2015-12-26T12:00:43.169+0000",
+            "updated": "2015-12-26T12:00:43.169+0000"
+          }
+        }
+        '''
+        def webhookJsonObject = new JSONObject(webhookJson)
+        def commentParser = new WebhookCommentEventJsonParser()
+
+        when:
+        def commentEvent = commentParser.parse(webhookJsonObject)
+
+        then:
+        noExceptionThrown()
+        commentEvent != null
+        commentEvent.issue != null
+        commentEvent.issue.key == 'TEST-136'
+        commentEvent.comment != null
+        commentEvent.comment.body == 'Test comment'
+    }
+} 

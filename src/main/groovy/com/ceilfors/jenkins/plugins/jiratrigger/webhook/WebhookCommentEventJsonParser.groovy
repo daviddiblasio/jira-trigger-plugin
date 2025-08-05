@@ -33,11 +33,14 @@ class WebhookCommentEventJsonParser implements JsonObjectParser<WebhookCommentEv
         satisfyRequiredKeys(webhookEvent)
         satisfyCloudRequiredKeys(webhookEvent)
 
+        // Clean null timetracking values before parsing
+        JSONObject cleanedWebhookEvent = WebhookJsonPreprocessor.cleanNullTimetracking(webhookEvent)
+
         new WebhookCommentEvent(
-                webhookEvent.getLong('timestamp'),
-                webhookEvent.getString('webhookEvent'),
-                issueJsonParser.parse(webhookEvent.getJSONObject(ISSUE_KEY)),
-                new CommentJsonParser().parse(webhookEvent.getJSONObject('comment'))
+                cleanedWebhookEvent.getLong('timestamp'),
+                cleanedWebhookEvent.getString('webhookEvent'),
+                issueJsonParser.parse(cleanedWebhookEvent.getJSONObject(ISSUE_KEY)),
+                new CommentJsonParser().parse(cleanedWebhookEvent.getJSONObject('comment'))
         )
     }
 }
