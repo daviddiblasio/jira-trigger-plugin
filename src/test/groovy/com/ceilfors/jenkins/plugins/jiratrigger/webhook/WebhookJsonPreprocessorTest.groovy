@@ -4,7 +4,7 @@ import org.codehaus.jettison.json.JSONObject
 import spock.lang.Specification
 
 /**
- * Test for WebhookJsonPreprocessor to verify it correctly handles null timetracking values.
+ * Test for WebhookJsonPreprocessor to verify it correctly handles null values recursively.
  */
 class WebhookJsonPreprocessorTest extends Specification {
 
@@ -143,5 +143,222 @@ class WebhookJsonPreprocessorTest extends Specification {
         def issue = cleanedWebhook.getJSONObject('issue')
         def fields = issue.getJSONObject('fields')
         fields.getString('summary') == 'Test issue'
+    }
+
+    def 'Should clean null comment visibility fields'() {
+        given:
+        def webhookJson = '''
+        {
+          "timestamp": 1451136000000,
+          "webhookEvent": "comment_created",
+          "issue": {
+            "id": "11120",
+            "key": "TEST-136",
+            "fields": {
+              "summary": "Test issue"
+            }
+          },
+          "comment": {
+            "id": "10000",
+            "body": "Test comment",
+            "visibility": null
+          }
+        }
+        '''
+        def webhookJsonObject = new JSONObject(webhookJson)
+
+        when:
+        def cleanedWebhook = WebhookJsonPreprocessor.cleanNullTimetracking(webhookJsonObject)
+
+        then:
+        noExceptionThrown()
+        cleanedWebhook != null
+        
+        // Check that null visibility field is removed
+        def comment = cleanedWebhook.getJSONObject('comment')
+        comment.getString('body') == 'Test comment'
+        !comment.has('visibility')
+    }
+
+    def 'Should preserve valid comment visibility fields'() {
+        given:
+        def webhookJson = '''
+        {
+          "timestamp": 1451136000000,
+          "webhookEvent": "comment_created",
+          "issue": {
+            "id": "11120",
+            "key": "TEST-136",
+            "fields": {
+              "summary": "Test issue"
+            }
+          },
+          "comment": {
+            "id": "10000",
+            "body": "Test comment",
+            "visibility": {
+              "type": "role",
+              "value": "Developers"
+            }
+          }
+        }
+        '''
+        def webhookJsonObject = new JSONObject(webhookJson)
+
+        when:
+        def cleanedWebhook = WebhookJsonPreprocessor.cleanNullTimetracking(webhookJsonObject)
+
+        then:
+        noExceptionThrown()
+        cleanedWebhook != null
+        
+        // Check that valid visibility field is preserved
+        def comment = cleanedWebhook.getJSONObject('comment')
+        comment.getString('body') == 'Test comment'
+        comment.has('visibility')
+        comment.getJSONObject('visibility').getString('type') == 'role'
+        comment.getJSONObject('visibility').getString('value') == 'Developers'
+    }
+    
+    def 'Should clean null values from nested structures'() {
+        given:
+        def webhookJson = '''
+        {
+          "timestamp": 1640995200000,
+          "webhookEvent": "jira:issue_updated",
+          "issue": {
+            "id": "12345",
+            "key": "TEST-123",
+            "fields": {
+              "summary": "Test Issue",
+              "comment": [
+                {
+                  "id": "10001",
+                  "author": {
+                    "name": "testuser",
+                    "displayName": "Test User"
+                  },
+                  "body": "This is a test comment",
+                  "visibility": null
+                },
+                {
+                  "id": "10002", 
+                  "author": {
+                    "name": "testuser2",
+                    "displayName": "Test User 2"
+                  },
+                  "body": "This is another test comment",
+                  "visibility": {
+                    "type": "role",
+                    "value": "Developers"
+                  }
+                }
+              ],
+              "timetracking": {
+                "originalEstimate": null,
+                "remainingEstimate": null,
+                "timeSpent": null,
+                "originalEstimateSeconds": null,
+                "remainingEstimateSeconds": null,
+                "timeSpentSeconds": null
+              }
+            }
+          }
+        }
+        '''
+        def webhookJsonObject = new JSONObject(webhookJson)
+
+        when:
+        def cleanedWebhook = WebhookJsonPreprocessor.cleanNullTimetracking(webhookJsonObject)
+
+        then:
+        noExceptionThrown()
+        cleanedWebhook != null
+        
+        // Check that comments array is processed correctly
+        def comments = cleanedWebhook.getJSONObject('issue').getJSONObject('fields').getJSONArray('comment')
+        comments.length() == 2
+        
+        // First comment should have visibility removed
+        !comments.getJSONObject(0).has('visibility')
+        
+        // Second comment should have visibility preserved
+        comments.getJSONObject(1).has('visibility')
+        comments.getJSONObject(1).getJSONObject('visibility').getString('type') == 'role'
+        comments.getJSONObject(1).getJSONObject('visibility').getString('value') == 'Developers'
+        
+        // Timetracking should be empty
+        def timetracking = cleanedWebhook.getJSONObject('issue').getJSONObject('fields').getJSONObject('timetracking')
+        timetracking.length() == 0
+    }
+    
+    def 'Should handle any null values anywhere in the JSON structure'() {
+        given:
+        def webhookJson = '''
+        {
+          "timestamp": 1451136000000,
+          "webhookEvent": "jira:issue_updated",
+          "nullField": null,
+          "issue": {
+            "id": "11120",
+            "key": "TEST-136",
+            "nullId": null,
+            "fields": {
+              "summary": "Test issue",
+              "nullSummary": null,
+              "nested": {
+                "value": "test",
+                "nullValue": null
+              }
+            }
+          },
+          "changelog": {
+            "id": "67890",
+            "nullId": null,
+            "items": [
+              {
+                "field": "status",
+                "nullField": null,
+                "from": "To Do",
+                "to": "In Progress"
+              }
+            ]
+          }
+        }
+        '''
+        def webhookJsonObject = new JSONObject(webhookJson)
+
+        when:
+        def cleanedWebhook = WebhookJsonPreprocessor.cleanNullTimetracking(webhookJsonObject)
+
+        then:
+        noExceptionThrown()
+        cleanedWebhook != null
+        
+        // Top-level null fields should be removed
+        !cleanedWebhook.has('nullField')
+        
+        // Issue null fields should be removed
+        def issue = cleanedWebhook.getJSONObject('issue')
+        !issue.has('nullId')
+        
+        // Fields null fields should be removed
+        def fields = issue.getJSONObject('fields')
+        !fields.has('nullSummary')
+        
+        // Nested null fields should be removed
+        def nested = fields.getJSONObject('nested')
+        !nested.has('nullValue')
+        nested.getString('value') == 'test'
+        
+        // Changelog null fields should be removed
+        def changelog = cleanedWebhook.getJSONObject('changelog')
+        !changelog.has('nullId')
+        
+        // Items array null fields should be removed
+        def items = changelog.getJSONArray('items')
+        items.length() == 1
+        !items.getJSONObject(0).has('nullField')
+        items.getJSONObject(0).getString('field') == 'status'
     }
 } 

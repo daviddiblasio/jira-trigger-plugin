@@ -34,7 +34,7 @@ class CustomFieldParameterResolverTest extends Specification {
         'Date Picker'                    | '10101'       | '2017-08-17'
         'Date Time Picker'               | '10102'       | '2017-08-17T01:00:00.000+0000'
         'Labels'                         | '10103'       | 'label'
-        'Number Field'                   | '10104'       | '1.0'
+        'Number Field'                   | '10104'       | '1'
         'Radio Buttons'                  | '10105'       | 'radio option 1'
         'Select List (multiple choices)' | '10107'       | 'singlelist option 1'
         'Select List (cascading)'        | '10106'       | 'cascade option 1'

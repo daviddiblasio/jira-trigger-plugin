@@ -1,0 +1,56 @@
+{
+  "timestamp": 1640995200000,
+  "webhookEvent": "jira:issue_updated",
+  "issue": {
+    "id": "12345",
+    "key": "TEST-123",
+    "fields": {
+      "summary": "Test Issue",
+      "description": "Test Description",
+      "timetracking": {
+        "originalEstimate": null,
+        "remainingEstimate": null,
+        "timeSpent": null,
+        "originalEstimateSeconds": null,
+        "remainingEstimateSeconds": null,
+        "timeSpentSeconds": null
+      },
+      "comment": [
+        {
+          "id": "10001",
+          "author": {
+            "name": "testuser",
+            "displayName": "Test User"
+          },
+          "body": "This is a test comment",
+          "visibility": "null"
+        },
+        {
+          "id": "10002", 
+          "author": {
+            "name": "testuser2",
+            "displayName": "Test User 2"
+          },
+          "body": "This is another test comment",
+          "visibility": {
+            "type": "role",
+            "value": "Developers"
+          }
+        }
+      ]
+    }
+  },
+  "changelog": {
+    "id": "67890",
+    "items": [
+      {
+        "field": "status",
+        "fieldtype": "jira",
+        "from": "To Do",
+        "fromString": "To Do",
+        "to": "In Progress",
+        "toString": "In Progress"
+      }
+    ]
+  }
+} 
